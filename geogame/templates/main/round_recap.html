@@ -1,0 +1,63 @@
+{% extends 'game_base.html' %}
+
+{% block content %}
+
+<div class="container">
+  <div class="row">
+    <div class="col-lg-12 pt-4 pb-4">
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-{{message.tags}}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      <div class="alert alert-info">
+        Your guess was {{distance}}km away.
+      </div>
+
+      <div id="map" class="map"></div>
+
+      {% if last_round %}
+        <a class="btn btn-success btn-lg btn-block" href="{% url 'game:end-recap-view' game_pk=game_id %}" role="button">Game Recap</a>
+      {% else %}
+        <a class="btn btn-success btn-lg btn-block" href="{% url 'game:round-view' game_pk=game_id round_pk=next_round_id %}" role="button">Next Round</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+  function initializeMaps() {
+    var actual_coord = {lat: {{lat}}, lng: {{lng}}};
+    var guess_coord = {lat: {{guess_lat}}, lng: {{guess_lng}}};
+
+    var map = new google.maps.Map(document.getElementById('map'), {
+      zoom: 4,
+      center: actual_coord
+    });
+
+    var marker = new google.maps.Marker({
+      position: actual_coord,
+      map: map,
+      title: 'Actual Position',
+      icon: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png',
+      draggable:false,
+    });
+
+    var marker2 = new google.maps.Marker({
+      position: guess_coord,
+      map: map,
+      title: 'Your Guess',
+      draggable:false,
+    });
+
+  }
+</script>
+
+<script async defer
+  src="https://maps.googleapis.com/maps/api/js?key={{user.api_key}}&callback=initializeMaps">
+</script>
+
+{% endblock %}

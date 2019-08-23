@@ -1,0 +1,41 @@
+{% extends 'game_base.html' %}
+
+{% block content %}
+<div class="container">
+  <div class="row">
+    <div class="col-lg-10 offset-lg-1 content">
+      <h1 class="section-header">Your Profile</h1>
+    </div>
+  </div>
+</div>
+<div class="container">
+  <div class="row">
+    <div class="col-lg-10 offset-lg-1 content">
+      <p>Logged in as {{user.email}}</p>
+      <p>
+        <a class="btn btn-primary btn-lg" style="margin-top:16px" href="{% url 'account_change_password' %}">Change Password</a>
+      </p>
+      <p>
+        <a class="btn btn-primary btn-lg" href="{% url 'api-key-view' pk=user.pk %}">API key</a>
+      </p>
+    </div>
+  </div>
+</div>
+<div class="container">
+  <div class="row">
+    <div class="col-lg-10 offset-lg-1 content">
+      <h3 class="section-header">Played Games</h3>
+      <p>Coming soon</p>
+    </div>
+  </div>
+</div>
+<div class="container">
+  <div class="row">
+    <div class="col-lg-10 offset-lg-1 content">
+      <h3 class="section-header">Your Contributions</h3>
+      <p>Coming soon</p>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

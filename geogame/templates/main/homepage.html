@@ -1,0 +1,78 @@
+{% extends 'game_base.html' %}
+
+{% block content %}
+<div class="container">
+  <div class="row">
+    <div class="col-lg-10 offset-lg-1 content">
+      <h1 class="section-header">Welcome to Geogame</h1>
+    </div>
+  </div>
+</div>
+<div class="container">
+  <div class="row">
+    <div class="col-lg-10 offset-lg-1 content">
+      {% if user.is_authenticated %}
+        {% if has_api_key %}
+          {% if existing_game %}
+            <a class="btn btn-info btn-lg btn-block" href="{% url 'game:round-view' game_pk=existing_game.id round_pk=existing_round.id %}" role="button">Continue Last Game</a>
+            <a class="btn btn-success btn-lg btn-block" href="{% url 'game:new-game' %}" role="button">New Game</a>
+          {% else %}
+            <button type="button" class="btn btn-info btn-lg btn-block" disabled>Continue Last Game</button>
+            <a class="btn btn-success btn-lg btn-block" href="{% url 'game:new-game' %}" role="button">New Game</a>
+          {% endif %}
+        {% else %}
+          <div class="alert alert-warning">
+            You must set an api key on your profile page to play the game. Please read the FAQ for more info.
+          </div>
+          <button type="button" class="btn btn-info btn-lg btn-block" disabled>Continue Last Game</button>
+          <button type="button" class="btn btn-success btn-lg btn-block" disabled>New Game</button>
+        {% endif %}
+
+      {% else %}
+        <div class="alert alert-danger">
+          You must be logged in to play the game. Please read the FAQ for more info.
+        </div>
+        <button type="button" class="btn btn-info btn-lg btn-block" disabled>Continue Last Game</button>
+        <button type="button" class="btn btn-success btn-lg btn-block" disabled>New Game</button>
+      {% endif %}
+    </div>
+  </div>
+</div>
+<div class="container">
+  <div class="row">
+    <div class="col-lg-10 offset-lg-1 content">
+      <h3 class="section-header">FAQ</h3>
+      <p><strong>What is this?</strong></p>
+      <p>This is a game that uses <a href="http://www.geoguessr.com">Geoguessr</a> as inspiration.</p>
+      <p><strong>Why does this exist?</strong></p>
+      <p>Sadly, because of Google's predatory pricing strategy for their Maps api, geoguessr have had to modify their game in a detrimental way to cut costs.</p>
+      <p>I created this little site to allow people to play the game how it used to be (or as close to it).</p>
+      <p><strong>Why do I need an api key?</strong></p>
+      <p>To get around the aforementioned api pricing strategy I require you to upload your own api key.</p>
+      <p>Your api key will be used only for games that you play, each key has $200/month free usage, which is plenty for all but the most avid players.</p>
+      <p><strong>How do I get an api key?</strong></p>
+      <p>Go <a href="https://developers.google.com/maps/documentation/javascript/get-api-key">here</a> and register to get an api key.</p>
+      <p>Once you have a key save it against your profile <a href="{% url 'profile' %}">here</a>.
+      <p><strong>Is this safe?</strong></p>
+      <p>All I can do is offer assurances that I won't use the api keys for anything other than their stated purpose: namely, for each individual's games on this site.</p>
+      <p>This site uses django's built in authentication framework, and I have taken every care to look after your personal details.</p>
+      <p><strong>What does the "Broken Streetview" button do?</strong></p>
+      <p>Sometimes a coordinate with no valid streetview is selected for you, you will just get a black screen.</p>
+      <p>If this occurs please click the "Broken Streetview" button and you will be provided with a new scene and the faulty coordinate will be removed from the database.</p>
+      <p><strong>There isn't a great variety of countries, why?</strong></p>
+      <p>I am relying on crowd sourcing of playable scenes, please consider helping out by <a href="{% url 'game:contribute' %}">adding a few coordinates of your own</a>.</p>
+      <p>You get to keep track of the coordinates you add, and see how well (or badly) other people do on them!</p>
+      <p>For now I have managed to find some data on uk coordinates that I can use, but its not so easy getting data for other countries.</p>
+      <p><strong>I didn't receive my email reset password, what gives?</strong></p>
+      <p>I am using a free mail server to send password reset emails, the limit is 100/day.</p>
+      <p>If you require assisstance accessing your account, please email edward.wilding3@gmail.com</p>
+      <p><strong>This site is atrocious and you should feel bad</strong></p>
+      <p>Firstly that isn't a question, secondly that hurts my feelings, thirdly I built it in 2 days after geoguessr changed their site.</p>
+      <p><strong>This site is amazing, how can I contact you to discuss this, or another, site?</strong></p>
+      <p>Thank you! Please get in touch: edward.wilding3@gmail.com</p>
+
+      <h4>Now go out there and have some fun exploring the world!</h4>
+    </div>
+  </div>
+</div>
+{% endblock %}

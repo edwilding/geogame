@@ -1,0 +1,74 @@
+{% extends 'game_base.html' %}
+
+{% block content %}
+
+<div class="container">
+  <div class="row">
+    <div class="col-lg-12 pt-4 pb-4">
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-{{message.tags}}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      <div class="alert alert-info">
+        Your average guess was {{average_distance}}km away.
+      </div>
+
+      <div id="map" class="map"></div>
+
+      <a class="btn btn-success btn-lg btn-block" href="{% url 'game:new-game' %}" role="button">New Game</a>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  function initializeMaps() {
+
+    var map = new google.maps.Map(document.getElementById('map'), {
+      zoom: 2,
+      center: {lat: 30, lng: 0}
+    });
+
+    {% for result in results %}
+      var actual_coord{{forloop.counter}} = {lat: {{result.0.0}}, lng: {{result.0.1}}};
+      var guess_coord{{forloop.counter}} = {lat: {{result.1.0}}, lng: {{result.1.1}}};
+
+      var actual_marker{{forloop.counter}} = new google.maps.Marker({
+        position: actual_coord{{forloop.counter}},
+        map: map,
+        title: 'Actual Position',
+        icon: 'http://maps.google.com/mapfiles/ms/micons/green.png',
+        draggable:false,
+      });
+
+      var guess_marker{{forloop.counter}} = new google.maps.Marker({
+        position: guess_coord{{forloop.counter}},
+        map: map,
+        title: 'Your Guess',
+        draggable:false,
+      });
+
+      var line{{forloop.counter}} = new google.maps.Polyline({
+          path: [
+              new google.maps.LatLng({{result.0.0}}, {{result.0.1}}),
+              new google.maps.LatLng({{result.1.0}}, {{result.1.1}})
+          ],
+          strokeColor: "#FF0000",
+          strokeOpacity: 0.8,
+          strokeWeight: 5,
+          map: map
+      });
+    {% endfor %}
+
+  }
+</script>
+
+<script async defer
+  src="https://maps.googleapis.com/maps/api/js?key={{user.api_key}}&callback=initializeMaps">
+</script>
+
+{% endblock %}

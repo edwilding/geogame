@@ -1,0 +1,7 @@
+*.pyc
+env_db.txt
+env_email_key.txt
+env_secret_key.txt
+/static
+!.gitignore
+gunicorn.conf.py
