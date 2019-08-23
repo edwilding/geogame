@@ -19,12 +19,19 @@ If this occurs please click the "Broken Streetview" button and you will be provi
 
 
 
+
 Todo:
 
 validate user api key on input
+
 validate coordinates on input
+
 change contribution page so you contribute a whole game
+
 implement list of previous games on your profile
+
 implement list of contributed games on your profile
+
 ingest more coordinates for more countries
+
 country based games (e.g UK only (I have made a start by linking each coordinate to a country))
