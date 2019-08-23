@@ -1,5 +1,4 @@
 # geogame
-A geoguessr inspired game, using individual's api keys.
 [Play it here!](https://geogame.peakdistrictwalks.org.uk)
 
 **What is this?**
