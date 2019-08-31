@@ -39,16 +39,19 @@ class HomePageView(TemplateView):
         if user.is_authenticated:
             if user.api_key:
                 context['has_api_key'] = True
-                game = Game.objects.filter(user=user, active=True)
-                if game and game.exists():
-                    game = game.first()
-                    if not GameRound.objects.get(game=game, order=4).guess_lat:
-                        context['existing_game'] = game
-                        rounds = GameRound.objects.filter(game=game).order_by('order')
-                        for round in rounds:
-                            if not round.guess_lat or not round.guess_lng:
-                                context['existing_round'] = round
-                                break
+                try:
+                    game = Game.objects.filter(user=user, active=True)
+                    if game and game.exists():
+                        game = game.first()
+                        if not GameRound.objects.get(game=game, order=4).guess_lat:
+                            context['existing_game'] = game
+                            rounds = GameRound.objects.filter(game=game).order_by('order')
+                            for round in rounds:
+                                if not round.guess_lat or not round.guess_lng:
+                                    context['existing_round'] = round
+                                    break
+                except:
+                    pass
             else:
                 context['has_api_key'] = False
         return context
@@ -79,7 +82,7 @@ class ContributeView(views.LoginRequiredMixin, CreateView):
         self.object = form.save(commit=False)
         self.object.user = self.request.user
         self.object.save()
-        messages.success(self.request, "Thank you so much for helping the site, you coordinates have been added.")
+        messages.success(self.request, "Your coordinates have been added.")
         return redirect(self.get_success_url())
 
 
