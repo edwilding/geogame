@@ -7,8 +7,7 @@ from .models import User, Coord
 
 @admin.register(Coord)
 class CoordAdmin(admin.ModelAdmin):
-    list_display = 'id', 'country',
-    search_fields = 'country',
+    list_display = 'id',
 
 
 class CustomUserAdmin(UserAdmin):

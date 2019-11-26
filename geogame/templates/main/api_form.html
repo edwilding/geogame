@@ -4,7 +4,7 @@
 <div class="container">
   <div class="row">
     <div class="col-lg-10 offset-lg-1 content">
-      <h1 class="section-header">API key for for {{user.email}}</h1>
+      <h1 class="section-header">Details for {{user.email}}</h1>
     </div>
   </div>
 </div>
@@ -15,7 +15,7 @@
         {{ form.non_field_errors }}
         {% csrf_token %}
         {{form.as_p}}
-        <button type="submit" class="btn btn-primary">Update API Key</button>
+        <button type="submit" class="btn btn-primary">Update User Info</button>
       </form>
     </div>
   </div>

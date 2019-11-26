@@ -15,17 +15,20 @@
         {% if has_api_key %}
           {% if existing_game %}
             <a class="btn btn-info btn-lg btn-block" href="{% url 'game:round-view' game_pk=existing_game.id round_pk=existing_round.id %}" role="button">Continue Last Game</a>
-            <a class="btn btn-success btn-lg btn-block" href="{% url 'game:new-game' %}" role="button">New Game</a>
+            <a class="btn btn-success btn-lg btn-block" href="{% url 'game:new-game' %}" role="button">New Random Game</a>
+            <a class="btn btn-warning btn-lg btn-block" href="{% url 'game:list-challenge' %}" role="button">View Challenges</a>
           {% else %}
             <button type="button" class="btn btn-info btn-lg btn-block" disabled>Continue Last Game</button>
-            <a class="btn btn-success btn-lg btn-block" href="{% url 'game:new-game' %}" role="button">New Game</a>
+            <a class="btn btn-success btn-lg btn-block" href="{% url 'game:new-game' %}" role="button">New Random Game</a>
+            <a class="btn btn-warning btn-lg btn-block" href="{% url 'game:list-challenge' %}" role="button">View Challenges</a>
           {% endif %}
         {% else %}
           <div class="alert alert-warning">
             You must set an api key on your profile page to play the game. Please read the FAQ for more info.
           </div>
           <button type="button" class="btn btn-info btn-lg btn-block" disabled>Continue Last Game</button>
-          <button type="button" class="btn btn-success btn-lg btn-block" disabled>New Game</button>
+          <button type="button" class="btn btn-success btn-lg btn-block" disabled>New Random Game</button>
+          <button type="button" class="btn btn-warning btn-lg btn-block" disabled>View Challenges</button>
         {% endif %}
 
       {% else %}
@@ -60,7 +63,7 @@
       <p>Sometimes a coordinate with no valid streetview is selected for you, you will just get a black screen.</p>
       <p>If this occurs please click the "Broken Streetview" button and you will be provided with a new scene and the faulty coordinate will be removed from the database.</p>
       <p><strong>There isn't a great variety of countries, why?</strong></p>
-      <p>I am relying on crowd sourcing of playable scenes, please consider helping out by <a href="{% url 'game:contribute' %}">adding a few coordinates of your own</a>.</p>
+      <p>I am relying on crowd sourcing of playable scenes, please consider helping out by <a href="{% url 'game:create-challenge' %}">adding a few coordinates of your own</a>.</p>
       <p>You get to keep track of the coordinates you add, and see how well (or badly) other people do on them!</p>
       <p>For now I have managed to find some data on uk coordinates that I can use, but its not so easy getting data for other countries.</p>
       <p><strong>I didn't receive my email reset password, what gives?</strong></p>

@@ -16,7 +16,7 @@
         <a class="btn btn-primary btn-lg" style="margin-top:16px" href="{% url 'account_change_password' %}">Change Password</a>
       </p>
       <p>
-        <a class="btn btn-primary btn-lg" href="{% url 'api-key-view' pk=user.pk %}">API key</a>
+        <a class="btn btn-primary btn-lg" href="{% url 'api-key-view' pk=user.pk %}">Edit Details</a>
       </p>
     </div>
   </div>
@@ -25,6 +25,7 @@
   <div class="row">
     <div class="col-lg-10 offset-lg-1 content">
       <h3 class="section-header">Played Games</h3>
+      <hr>
       <p>Coming soon</p>
     </div>
   </div>
@@ -33,7 +34,23 @@
   <div class="row">
     <div class="col-lg-10 offset-lg-1 content">
       <h3 class="section-header">Your Contributions</h3>
-      <p>Coming soon</p>
+      <hr>
+      <table>
+        <tr>
+          <th>Challenge Name</th>
+          <th>Average Score</th>
+          <th></th>
+        </tr>
+        {% for challenge in user_challenges %}
+          <tr>
+            <td>{{challenge.name}}</td>
+            <td>{{challenge.average}}</td>
+            <td><a class="btn btn-warning btn-block" href="{% url 'game:edit-challenge' pk=challenge.pk %}" role="button">Edit</a></td>
+          </tr>
+        {% endfor %}
+      </table>
+      <hr>
+      <a class="btn btn-primary btn-lg" href="{% url 'game:create-challenge' %}">Create a New Challenge</a>
     </div>
   </div>
 </div>
