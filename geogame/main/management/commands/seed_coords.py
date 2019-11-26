@@ -20,13 +20,18 @@ class Command(BaseCommand):
 
         with transaction.atomic():
 
-            country = Country.objects.get(country='United Kingdom')
+            country = Country.objects.get(country="United States of America")
             user = User.objects.first()
             with open('/home/ubuntu/lat_lng.csv', 'r') as csvfile:
                 datareader = csv.reader(csvfile)
                 for row in datareader:
                     if row:
-                        Coord.objects.create(lat=row[0], lng=row[1], country=country, user=user)
+                        _,c = Coord.objects.get_or_create(
+                            lat=row[0],
+                            lng=row[1],
+                            country=country,
+                            user=user
+                            )
 
             if options['dry_run']:
                 transaction.set_rollback(True)

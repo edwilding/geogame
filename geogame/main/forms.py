@@ -5,26 +5,17 @@ from django.conf import settings
 from django.forms import widgets
 from django.forms.utils import to_current_timezone
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
+from django.forms import modelformset_factory
 
 from geogame.main.models import (
-    Coord, User, GameRound
+    Coord, User, GameRound, Challenge
     )
 
-from dal import autocomplete
-#from django_starfield import Stars
 
-
-class CoordForm(forms.ModelForm):
-
+class ChallengeForm(forms.ModelForm):
     class Meta:
-        model = Coord
-        fields = ('lat', 'lng', 'country')
-        widgets = {'country': autocomplete.ModelSelect2(url='game:country-autocomplete')}
-
-    def clean(self):
-        cleaned_data = super(CoordForm, self).clean()
-        lat = cleaned_data.get('lat')
-        lng = cleaned_data.get('lng')
+        model = Challenge
+        fields = ('name',)
 
 
 class GuessForm(forms.ModelForm):
@@ -47,7 +38,7 @@ class APIForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ('api_key',)
+        fields = ('api_key', 'display_name',)
 
 
 class CustomUserCreationForm(UserCreationForm):
@@ -62,3 +53,12 @@ class CustomUserChangeForm(UserChangeForm):
     class Meta:
         model = User
         fields = ('username', 'email')
+
+
+
+
+ChallengeCoordFormSet = modelformset_factory(
+    Coord,
+    fields=('lat', 'lng',),
+    extra=1,
+)

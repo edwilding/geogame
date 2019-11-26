@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% load staticfiles%}
+
+{% block content %}
+<div class="container">
+  <div class="row">
+    <div class="col-lg-10 offset-lg-1 content">
+      <h1 class="section-header">Edit Challenge {{challenge.name}}</h1>
+    </div>
+  </div>
+</div>
+<div class="container">
+  <div class="row">
+    <div class="col-lg-10 offset-lg-1 content">
+      {% if form.errors %}
+          {% for field in form %}
+              {% for error in field.errors %}
+                  <div class="alert alert-danger">
+                      <strong>{{ error|escape }}</strong>
+                  </div>
+              {% endfor %}
+          {% endfor %}
+          {% for error in form.non_field_errors %}
+              <div class="alert alert-danger">
+                  <strong>{{ error|escape }}</strong>
+              </div>
+          {% endfor %}
+      {% endif %}
+
+
+        <table>
+          <tr>
+            <th>Latitude</th>
+            <th>Longitude</th>
+            <th></th>
+          </tr>
+          {% for coord in coords %}
+            <tr>
+              <td>
+                {{ coord.lat }}
+              </td>
+              <td>
+                {{ coord.lng }}
+              </td>
+              <td style="width:105px">
+                <form action="{% url 'game:coord-delete' pk=coord.pk %}" method="POST">
+                  {% csrf_token %}
+                  <input type="submit" class="btn btn-danger btn-block" value="Remove" name="delete" style="margin-right:0">
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </table>
+
+      <hr>
+
+
+
+
+      <form id="coordForm" method="post" action="">
+        {% csrf_token %}
+        <table border="0" cellpadding="0" cellspacing="0">
+            <tbody>
+                {% for form in formset.forms %}
+                  <tr>
+                     <td>{{ form.lat }}</td>
+                     <td>{{ form.lng }}</td>
+                     <td style="width:105px"></td>
+                  </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {{ formset.management_form }}
+      </form>
+      <input class="btn btn-primary pull-right" type="submit" value="Save" form="coordForm">
+
+    </div>
+  </div>
+</div>
+<script src="{% static 'dynamic_formsets/jquery.formset.js' %}" type="text/javascript"> </script>
+<script type="text/javascript">
+  $('#coordForm').formset();
+//   function defer(method) {
+//     if (window.jQuery) {
+//         $('.individual-form').formset();
+//     } else {
+//         setTimeout(function() { defer(method) }, 50);
+//     }
+// }
+</script>
+
+{% endblock %}

@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.shortcuts import get_object_or_404, redirect
 from django.views.generic import TemplateView, ListView
+from django.db.models import Avg
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
 from django.views.generic.detail import DetailView
 from django.views import View
@@ -10,24 +11,11 @@ from django.urls import reverse_lazy
 from braces import views
 
 from geogame.main.models import (
-    Game, GameRound, Coord, User,  Country
+    Game, GameRound, Coord, User, Challenge
 )
 from dal import autocomplete
-from geogame.main.forms import GuessForm, CoordForm, APIForm
+from geogame.main.forms import GuessForm, ChallengeCoordFormSet, APIForm, ChallengeForm
 
-
-class CountryAutocomplete(autocomplete.Select2QuerySetView):
-    def get_queryset(self):
-        # Don't forget to filter out results depending on the visitor !
-        if not self.request.user.is_authenticated:
-            return Country.objects.none()
-
-        qs = Country.objects.all().order_by('country')
-
-        if self.q:
-            qs = qs.filter(country__icontains=self.q)
-
-        return qs
 
 
 class HomePageView(TemplateView):
@@ -60,6 +48,12 @@ class HomePageView(TemplateView):
 class ProfilePageView(views.LoginRequiredMixin, TemplateView):
     template_name = 'main/profile.html'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        context['user_challenges'] = Challenge.objects.filter(user=user)
+        return context
+
 
 class UpdateAPIView(views.LoginRequiredMixin, UpdateView):
     model = User
@@ -70,20 +64,75 @@ class UpdateAPIView(views.LoginRequiredMixin, UpdateView):
         return reverse_lazy('profile')
 
 
-class ContributeView(views.LoginRequiredMixin, CreateView):
-    model = Coord
-    form_class = CoordForm
-    template_name = 'main/contribute_form.html'
-
-    def get_success_url(self):
-        return reverse_lazy('game:contribute')
+class ChallengeCreateView(views.LoginRequiredMixin, CreateView):
+    template_name = 'main/create_challenge_form.html'
+    form_class = ChallengeForm
 
     def form_valid(self, form):
         self.object = form.save(commit=False)
         self.object.user = self.request.user
         self.object.save()
-        messages.success(self.request, "Your coordinates have been added.")
-        return redirect(self.get_success_url())
+        messages.success(self.request, 'Challenge Created Successfully, add some Co-ords')
+        return redirect(reverse_lazy('game:edit-challenge', args=(self.object.id,)))
+
+
+class EditChallengeView(views.UserPassesTestMixin, TemplateView):
+    template_name = 'main/edit_challenge_form.html'
+
+    def test_func(self, user):
+        challenge = get_object_or_404(Challenge, pk=self.kwargs['pk'])
+        return challenge.user == user
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        challenge = get_object_or_404(Challenge, pk=self.kwargs['pk'])
+        context['challenge'] = challenge
+        context['formset'] = ChallengeCoordFormSet(queryset=Coord.objects.none())
+        context['coords'] = Coord.objects.filter(challenge=challenge)
+        return context
+
+    def post(self, *args, **kwargs):
+        challenge = get_object_or_404(Challenge, pk=self.kwargs['pk'])
+        formset = ChallengeCoordFormSet(self.request.POST)
+
+        if formset.is_valid():
+            for form in formset:
+                obj = form.save(commit=False)
+                obj.challenge = challenge
+                obj.user = self.request.user
+                obj.save()
+                #XX prevent duplicates
+            messages.success(self.request, 'Co-ords Updated Successfully')
+            return redirect(reverse_lazy('game:edit-challenge', args=(challenge.id,)))
+        messages.error(self.request, 'The form was invalid - something has gone wrong')
+        return redirect(reverse_lazy('game:edit-challenge', args=(challenge.id,)))
+
+
+class CoordDeleteView(views.UserPassesTestMixin, DeleteView):
+    model = Coord
+
+    def test_func(self, user):
+        coord = self.get_object()
+        return coord.user == user
+
+    def get_success_url(self):
+        challenge = self.object.challenge
+        messages.success(self.request, 'Coord Removed Successfully')
+        return reverse_lazy('game:edit-challenge',args=(challenge.id,))
+
+
+class ChallengeListView(views.LoginRequiredMixin, ListView):
+    template_name = 'main/challenge_list.html'
+    context_object_name = 'challenges'
+    paginate_by = 50
+
+    def get_queryset(self):
+        ids = Coord.objects.filter(challenge__isnull=False).\
+            order_by().\
+            values('challenge').\
+            distinct()
+
+        return Challenge.objects.filter(id__in=ids).order_by('average')
 
 
 class NewGameView(views.LoginRequiredMixin, View):
@@ -91,7 +140,11 @@ class NewGameView(views.LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         user = self.request.user
         user.deactive_games()
-        game_pk, round_pk = user.generate_new_game()
+        if request.GET.get('challenge'):
+            challenge = get_object_or_404(Challenge, pk=request.GET.get('challenge'))
+            game_pk, round_pk = challenge.setup_challenge(user)
+        else:
+            game_pk, round_pk = user.generate_new_game()
 
         return redirect(
             reverse_lazy(
@@ -151,28 +204,58 @@ class RemoveCoordView(View):
     def post(self, request, *args, **kwargs):
         round = get_object_or_404(GameRound, pk=self.kwargs.get('round_pk', 0))
         game = get_object_or_404(Game, pk=self.kwargs.get('game_pk', 0))
-        qs = Coord.objects.all()
-        if round.game.country:
-            qs = qs.filter(country=round.game.country)
-        coords = qs.order_by('?')[:5]
+        dodgy_coord = round.coord
+        dodgy_coord.report()
 
-        current_coords = GameRound.objects.filter(game=game).exclude(id=round.id).values_list('coord__id', flat=True)
-        for coord in coords:
-            if coord.id not in current_coords:
-                round.coord = coord
-                round.save()
-                break
+        if game.challenge:
+            round.score = 30000
+            round.save()
+            next = round.order + 1
+            next_round = GameRound.objects.filter(
+                game=game,
+                order=next,
+            ).first()
+            if next_round:
+                return redirect(
+                    reverse_lazy(
+                        'game:round-view',
+                        kwargs={
+                            'game_pk': game.pk,
+                            'round_pk': next_round.pk,
+                        }
+                    )
+                )
+            else:
+                return redirect(
+                    reverse_lazy(
+                        'game:end-recap-view',
+                        kwargs={
+                            'game_pk': game.pk,
+                        }
+                    )
+                )
+
+        else:
+
+            qs = Coord.objects.filter(reports=0)
+            coords = qs.order_by('?')[:5]
+
+            current_coords = GameRound.objects.filter(game=game).exclude(id=round.id).values_list('coord__id', flat=True)
+            for coord in coords:
+                if coord.id not in current_coords:
+                    round.coord = coord
+                    round.save()
+                    break
 
         return redirect(
             reverse_lazy(
                 'game:round-view',
                 kwargs={
-                    'game_pk': round.game.pk,
+                    'game_pk': game.pk,
                     'round_pk': round.pk,
                     }
                 )
             )
-
 
 
 class RoundRecapView(views.UserPassesTestMixin, TemplateView):
@@ -195,13 +278,19 @@ class RoundRecapView(views.UserPassesTestMixin, TemplateView):
         context['game_id'] = round.game.id
         context['distance'] = "{0:.3f}".format(round.get_distance())
 
-        if round.order == 4:
+        next_round = GameRound.objects.filter(
+            game=round.game,
+            order=round.order + 1
+        ).first()
+
+        if not next_round:
+            #not every game is part of a challenge, so try updated the challenge average
+            try:
+                round.game.challenge.update_average_score()
+            except:
+                pass
             context['last_round'] = True
         else:
-            next_round = GameRound.objects.get(
-                game=round.game,
-                order=round.order+1
-                )
             context['next_round_id'] = next_round.id
         return context
 
@@ -214,7 +303,6 @@ class GameRecapView(views.UserPassesTestMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super(GameRecapView, self).get_context_data(**kwargs)
-        user = self.request.user
         game_id = self.kwargs.get('game_pk', 0)
         game = get_object_or_404(Game, pk=game_id)
 
@@ -229,6 +317,17 @@ class GameRecapView(views.UserPassesTestMixin, TemplateView):
             )
             distance_total += round.get_distance()
 
-        context['average_distance'] = "{0:.3f}".format(distance_total / 5)
         context['results'] = coord_results
+        context['average_distance'] = GameRound.objects.filter(game=game)\
+            .aggregate(Avg('result'))\
+            .get('result__avg', 0)
+        # not every game is part of a challenge, so keep this in a try
+        try:
+            context['all_average'] = game.challenge.average
+        except:
+            pass
         return context
+
+
+
+# handle reports differently if in a challenge (skip with score of 30000 instead of finding a random one)

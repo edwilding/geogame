@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'django_extensions',
     'dal',
     'dal_select2',
+    'dynamic_formsets',
 
     'geogame.main',
     'django_countries',
