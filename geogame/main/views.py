@@ -55,10 +55,15 @@ class ProfilePageView(views.LoginRequiredMixin, TemplateView):
         return context
 
 
-class UpdateAPIView(views.LoginRequiredMixin, UpdateView):
+class UpdateAPIView(views.UserPassesTestMixin, UpdateView):
     model = User
     form_class = APIForm
     template_name = 'main/api_form.html'
+    raise_exception = True
+
+    def test_func(self, user):
+        user = get_object_or_404(User, pk=self.kwargs.get('pk', 0))
+        return user == self.request.user
 
     def get_success_url(self):
         return reverse_lazy('profile')
@@ -305,6 +310,7 @@ class GameRecapView(views.UserPassesTestMixin, TemplateView):
         context = super(GameRecapView, self).get_context_data(**kwargs)
         game_id = self.kwargs.get('game_pk', 0)
         game = get_object_or_404(Game, pk=game_id)
+        self.request.user.deactive_games()
 
         coord_results = []
         distance_total = 0
