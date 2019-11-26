@@ -1,5 +1,5 @@
 {% extends 'game_base.html' %}
-
+{% load humanize %}
 {% block content %}
 
 <div class="container">
@@ -14,7 +14,7 @@
       {% endif %}
 
       <div class="alert alert-info">
-        Your average guess was {{average_distance}}km away.{% if all_average %} The average for this challenge is {{all_average}}km{%endif%}
+        Your average guess was {{average_distance|intcomma}}m away.{% if all_average %} The average for this challenge is {{all_average|intcomma}}m{%endif%}
       </div>
 
       <div id="map" class="map"></div>

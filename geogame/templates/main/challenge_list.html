@@ -1,5 +1,5 @@
 {% extends 'game_base.html' %}
-
+{% load humanize %}
 {% block content %}
 <div class="container">
   <div class="row">
@@ -20,7 +20,7 @@
         {% for challenge in challenges %}
           <tr>
             <td>{{challenge.name}}</td>
-            <td>{{challenge.average}}</td>
+            <td>{{challenge.average|intcomma}}</td>
             <td><a class="btn btn-success btn-block" href="{% url 'game:new-game' %}?challenge={{challenge.id}}" role="button">Play</a></td>
           </tr>
         {% endfor %}

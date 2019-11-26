@@ -194,13 +194,12 @@ class RoundView(views.LoginRequiredMixin, UpdateView):
             self.object.guess_lat = 0
             self.object.guess_lng = 0
         self.object.save()
-        round = self.get_object()
         return redirect(
             reverse_lazy(
                 'game:round-recap-view',
                 kwargs={
-                    'game_pk': round.game.pk,
-                    'round_pk': round.pk,
+                    'game_pk': self.object.game.pk,
+                    'round_pk': self.object.pk,
                     }
                 )
             )
@@ -281,7 +280,7 @@ class RoundRecapView(views.UserPassesTestMixin, TemplateView):
         context['guess_lat'] = round.guess_lat
         context['guess_lng'] = round.guess_lng
         context['game_id'] = round.game.id
-        context['distance'] = "{0:.3f}".format(round.get_distance())
+        context['distance'] = int(round.result)
 
         next_round = GameRound.objects.filter(
             game=round.game,
@@ -313,7 +312,6 @@ class GameRecapView(views.UserPassesTestMixin, TemplateView):
         self.request.user.deactive_games()
 
         coord_results = []
-        distance_total = 0
         for round in GameRound.objects.filter(game=game).select_related('coord'):
             coord_results.append(
                 [
@@ -321,12 +319,13 @@ class GameRecapView(views.UserPassesTestMixin, TemplateView):
                     [round.guess_lat, round.guess_lng]
                 ]
             )
-            distance_total += round.get_distance()
 
         context['results'] = coord_results
-        context['average_distance'] = GameRound.objects.filter(game=game)\
+        context['average_distance'] = int(
+            GameRound.objects.filter(game=game)\
             .aggregate(Avg('result'))\
             .get('result__avg', 0)
+        )
         # not every game is part of a challenge, so keep this in a try
         try:
             context['all_average'] = game.challenge.average

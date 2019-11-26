@@ -1,5 +1,5 @@
 {% extends 'game_base.html' %}
-
+{% load humanize %}
 {% block content %}
 
 <div class="container">
@@ -14,7 +14,7 @@
       {% endif %}
 
       <div class="alert alert-info">
-        Your guess was {{distance}}km away.
+        Your guess was {{distance|intcomma}}m away.
       </div>
 
       <div id="map" class="map"></div>

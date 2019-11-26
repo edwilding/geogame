@@ -126,16 +126,11 @@ class GameRound(models.Model):
     guess_lng = models.CharField(_('longitude'), max_length=50, blank=True, null=True)
     result = models.PositiveIntegerField(default=0)
 
-    def get_distance(self):
+    def save(self, *args, **kwargs):
         if not self.guess_lat or not self.guess_lng:
-            self.distance = 0
-            self.save()
-            return 0
-
-        actual_coord = (self.coord.lat, self.coord.lng,)
-        guess_coord = (self.guess_lat, self.guess_lng,)
-
-        result = distance.distance(actual_coord, guess_coord).km
-        self.result = result
-        self.save()
-        return result
+            self.result = 0
+        else:
+            actual_coord = (self.coord.lat, self.coord.lng,)
+            guess_coord = (self.guess_lat, self.guess_lng,)
+            self.result = distance.distance(actual_coord, guess_coord).km * 1000
+        super().save(*args, **kwargs)
