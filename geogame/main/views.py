@@ -162,10 +162,13 @@ class NewGameView(views.LoginRequiredMixin, View):
             )
 
 
-class RoundView(views.LoginRequiredMixin, UpdateView):
+class RoundView(views.UserPassesTestMixin, UpdateView):
     model = GameRound
     form_class = GuessForm
     template_name = 'main/round.html'
+
+    def test_func(self, *args, **kwargs):
+        return self.request.user == get_object_or_404(Game, pk=self.kwargs.get('game_pk', 0)).user
 
     def get_object(self):
         round_id = self.kwargs.get('round_pk', 0)
