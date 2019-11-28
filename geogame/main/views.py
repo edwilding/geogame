@@ -216,6 +216,8 @@ class RemoveCoordView(View):
 
         if game.challenge:
             round.score = 30000
+            round.guess_lat = 0
+            round.guess_lng = 0
             round.save()
             next = round.order + 1
             next_round = GameRound.objects.filter(
@@ -233,6 +235,7 @@ class RemoveCoordView(View):
                     )
                 )
             else:
+                round.game.challenge.update_average_score()
                 return redirect(
                     reverse_lazy(
                         'game:end-recap-view',
@@ -319,7 +322,7 @@ class GameRecapView(views.UserPassesTestMixin, TemplateView):
             coord_results.append(
                 [
                     [round.coord.lat, round.coord.lng],
-                    [round.guess_lat, round.guess_lng]
+                    [round.guess_lat if round.guess_lat else 0, round.guess_lng if round.guess_lng else 0]
                 ]
             )
 

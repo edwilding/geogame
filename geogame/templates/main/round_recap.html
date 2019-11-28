@@ -17,7 +17,7 @@
         Your guess was {{distance|intcomma}}m away.
       </div>
 
-      <div id="map" class="map"></div>
+      <div id="map" class="guessMap"></div>
 
       {% if last_round %}
         <a class="btn btn-success btn-lg btn-block" href="{% url 'game:end-recap-view' game_pk=game_id %}" role="button">Game Recap</a>

@@ -2,41 +2,39 @@
 
 {% block content %}
 
-<div class="container">
-  <div class="row">
-    <div class="col-lg-12">
-      {% if messages %}
+{% if messages %}
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-12">
         {% for message in messages %}
           <div class="alert alert-{{message.tags}}">
             {{ message }}
           </div>
         {% endfor %}
-      {% endif %}
-
-
-      <div id="map" class="map"></div>
-
+      </div>
     </div>
   </div>
-  <div class="row">
-    <div class="col-lg-12">
+{% endif %}
 
-      <div id="map2" class="map"></div>
 
-      <form action="{% url 'game:round-view' game_pk=game_pk round_pk=round_pk %}" method="POST">
-        {{ form.non_field_errors }}
-        {% csrf_token %}
-        {{form.as_p}}
-        <button type="submit" class="btn btn-primary btn-block">Make Guess</button>
-      </form>
+<div id="map" class="map panoramaMap"></div>
 
-      <form action="{% url 'game:remove-coord' game_pk=game_pk round_pk=round_pk %}" method="POST">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-warning btn-block">Broken Streetview</button>
-      </form>
+<div id="map2" class="map guessMap"></div>
 
-    </div>
-  </div>
+<div class="mapButtons">
+  <button id="resizeMap" type="submit" class="btn btn-dark btn-circle btn-xl mapButton" title="Toggle Map">Map</button>
+  <button id="returnToStart" type="submit" class="btn btn-info btn-circle btn-xl mapButton" title="Return To Start">Start</button>
+  <form class="mapForm" action="{% url 'game:round-view' game_pk=game_pk round_pk=round_pk %}" method="POST">
+    {{ form.non_field_errors }}
+    {% csrf_token %}
+    {{form.as_p}}
+    <button type="submit" class="btn btn-primary btn-circle btn-xl mapButton" title="Make Your Guess">Guess</button>
+  </form>
+
+  <form class="mapForm" action="{% url 'game:remove-coord' game_pk=game_pk round_pk=round_pk %}" method="POST"  onsubmit="return confirm('Are you sure this streetview is broken?');">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-warning btn-circle btn-xl mapButton" title="Report Broken Streetview">Broken</button>
+  </form>
 </div>
 
 <script>
@@ -78,7 +76,36 @@
         map: map2
       });
     };
+
+    function returnToStart() {
+      panorama.setPosition(new google.maps.LatLng({{lat}},{{lng}}));
+    };
+
+    document.getElementById("returnToStart").addEventListener("click", function(){
+      returnToStart()
+    });
+
+    var toggle = false
+    document.getElementById("resizeMap").addEventListener("click", function(){
+      if (toggle == true) {
+        console.log("show it");
+        toggle = false;
+        document.getElementById('map2').style.minHeight = "40vh";
+        document.getElementById('map2').style.height = "40vh";
+        document.getElementById('map').style.height = "53vh";
+      } else {
+        console.log("hide it");
+        toggle = true;
+        document.getElementById('map2').style.minHeight = "0vh";
+        document.getElementById('map2').style.height = "0vh";
+        document.getElementById('map').style.height = "93vh";
+      };
+      google.maps.event.trigger(panorama, 'resize');
+    });
+
   }
+
+
 
 </script>
 
