@@ -26,7 +26,43 @@
     <div class="col-lg-10 offset-lg-1 content">
       <h3 class="section-header">Played Games</h3>
       <hr>
-      <p>Coming soon</p>
+      {% if played_paginator %}
+        <table>
+          <tr>
+            <th style="width:70%">Game</th>
+            <th style="width:15%">Score</th>
+            <th style="width:15%"></th>
+          </tr>
+          {% for game in played_paginator %}
+            <tr>
+              <td style="width:60%">
+                {% if game.challenge %}{{game.challenge.name}}{% else %}Random Game{% endif %}
+              </td>
+              <td>
+                {{game.score|intcomma}}
+              </td>
+              <td>
+                <a class="btn btn-primary btn-block" href="{% url 'game:end-recap-view' game_pk=game.pk %}">View</a>
+              </td>
+            </tr>
+          {% endfor %}
+        </table>
+        {% if played_is_paginated %}
+          <ul class="pagination">
+            {% if played_paginator.has_previous %}
+              <li class="page-item"><a class="page-link" href="?played=1&challenges={{challenges_paginator.number}}">First</a></li>
+              <li class="page-item"><a class="page-link" href="?played={{ played_paginator.previous_page_number }}&challenges={{challenges_paginator.number}}">{{ played_paginator.previous_page_number }}</a></li>
+            {% endif %}
+            <li class="page-item active"><a class="page-link" href="#">{{ played_paginator.number }}</a></li>
+            {% if played_paginator.has_next %}
+              <li class="page-item"><a class="page-link" href="?played={{ played_paginator.next_page_number }}&challenges={{challenges_paginator.number}}">{{ played_paginator.next_page_number }}</a></li>
+              <li class="page-item"><a class="page-link" href="?played={{ played_paginator.paginator.num_pages }}&challenges={{challenges_paginator.number}}">Last</a></li>
+            {% endif %}
+          </ul>
+        {% endif %}
+      {% else %}
+        <p>You haven't played any games yet, what are you waiting for?</p>
+      {% endif %}
     </div>
   </div>
 </div>
@@ -35,20 +71,37 @@
     <div class="col-lg-10 offset-lg-1 content">
       <h3 class="section-header">Your Contributions</h3>
       <hr>
-      <table>
-        <tr>
-          <th>Challenge Name</th>
-          <th>Average Score</th>
-          <th></th>
-        </tr>
-        {% for challenge in user_challenges %}
+      {% if challenges_paginator %}
+        <table>
           <tr>
-            <td>{{challenge.name}}</td>
-            <td>{{challenge.average|intcomma}}</td>
-            <td><a class="btn btn-warning btn-block" href="{% url 'game:edit-challenge' pk=challenge.pk %}" role="button">Edit</a></td>
+            <th style="width:70%">Challenge Name</th>
+            <th style="width:15%">Average Score</th>
+            <th style="width:15%"></th>
           </tr>
-        {% endfor %}
-      </table>
+          {% for challenge in challenges_paginator %}
+            <tr>
+              <td>{{challenge.name}}</td>
+              <td>{{challenge.average|intcomma}}</td>
+              <td><a class="btn btn-warning btn-block" href="{% url 'game:edit-challenge' pk=challenge.pk %}" role="button">Edit</a></td>
+            </tr>
+          {% endfor %}
+        </table>
+        {% if challenges_is_paginated %}
+          <ul class="pagination">
+            {% if challenges_paginator.has_previous %}
+              <li class="page-item"><a class="page-link" href="?challenges=1&played={{played_paginator.number}}">First</a></li>
+              <li class="page-item"><a class="page-link" href="?challenges={{ challenges_paginator.previous_page_number }}&played={{played_paginator.number}}">{{ challenges_paginator.previous_page_number }}</a></li>
+            {% endif %}
+            <li class="page-item active"><a class="page-link" href="#">{{ challenges_paginator.number }}</a></li>
+            {% if challenges_paginator.has_next %}
+              <li class="page-item"><a class="page-link" href="?challenges={{ challenges_paginator.next_page_number }}&played={{played_paginator.number}}">{{ challenges_paginator.next_page_number }}</a></li>
+              <li class="page-item"><a class="page-link" href="?challenges={{ challenges_paginator.paginator.num_pages }}&played={{played_paginator.number}}">Last</a></li>
+            {% endif %}
+          </ul>
+        {% endif %}
+      {% else %}
+        <p>You haven't added any challenges, try adding one.</p>
+      {% endif %}
       <hr>
       <a class="btn btn-primary btn-lg" href="{% url 'game:create-challenge' %}">Create a New Challenge</a>
     </div>

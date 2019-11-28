@@ -7,6 +7,7 @@ from django.views.generic.detail import DetailView
 from django.views import View
 from django.contrib import messages
 from django.urls import reverse_lazy
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from braces import views
 
@@ -51,7 +52,30 @@ class ProfilePageView(views.LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
-        context['user_challenges'] = Challenge.objects.filter(user=user)
+        games = Game.objects.filter(user=user, active=False).order_by('-id')
+
+        paginator = Paginator(games, 10)
+        page = self.request.GET.get('played')
+        try:
+            played_paginator = paginator.page(page)
+        except PageNotAnInteger:
+            played_paginator = paginator.page(1)
+        except EmptyPage:
+            played_paginator = paginator.page(paginator.num_pages)
+        context['played_is_paginated'] = played_paginator.has_other_pages()
+        context['played_paginator'] = played_paginator
+
+        challenges = Challenge.objects.filter(user=user).order_by('-id')
+        paginator = Paginator(challenges, 10)
+        page = self.request.GET.get('challenges')
+        try:
+            challenges_paginator = paginator.page(page)
+        except PageNotAnInteger:
+            challenges_paginator = paginator.page(1)
+        except EmptyPage:
+            challenges_paginator = paginator.page(paginator.num_pages)
+        context['challenges_is_paginated'] = challenges_paginator.has_other_pages()
+        context['challenges_paginator'] = challenges_paginator
         return context
 
 
@@ -197,6 +221,9 @@ class RoundView(views.UserPassesTestMixin, UpdateView):
             self.object.guess_lat = 0
             self.object.guess_lng = 0
         self.object.save()
+        #add to the score and save against the game object, makes for easier score retrieval later
+        self.object.game.score = self.object.game.score + self.object.result
+        self.object.game.save()
         return redirect(
             reverse_lazy(
                 'game:round-recap-view',
@@ -338,7 +365,3 @@ class GameRecapView(views.UserPassesTestMixin, TemplateView):
         except:
             pass
         return context
-
-
-
-# handle reports differently if in a challenge (skip with score of 30000 instead of finding a random one)
