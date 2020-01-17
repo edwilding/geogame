@@ -198,15 +198,22 @@ class RoundView(views.UserPassesTestMixin, UpdateView):
         round_id = self.kwargs.get('round_pk', 0)
         return get_object_or_404(GameRound, pk=round_id)
 
+    def get(self, *args, **kwargs):
+        round_id = self.kwargs.get('round_pk', 0)
+        round = get_object_or_404(GameRound, pk=round_id)
+
+        if round.guess_lat:
+            # user has already played this round, so something has gone wrong
+            messages.warning(self.request, 'You have already played this round, something went wrong. Hit "Continue Last Game" to try again.')
+            return redirect(reverse_lazy('home'))
+
+        return super().get(*args, **kwargs)
+
     def get_context_data(self, **kwargs):
         context = super(RoundView, self).get_context_data(**kwargs)
         user = self.request.user
         round_id = self.kwargs.get('round_pk', 0)
         round = get_object_or_404(GameRound, pk=round_id)
-        if round.guess_lat:
-            #user has already played this round, so something has gone wrong
-            messages.warning(self.request, 'You have already played this round, something went wrong. Hit "Continue Last Game" to try again.')
-            return redirect(reverse_lazy('home'))
 
         context['api_key'] = user.api_key
         context['lat'] = round.coord.lat

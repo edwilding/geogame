@@ -51,7 +51,7 @@ class User(AbstractUser):
 
 
 class Challenge(models.Model):
-    name = models.CharField(_('Challenge Name'), max_length=255, blank=True, db_index=True)
+    name = models.CharField(_('Challenge Name'), max_length=255, blank=False, db_index=True)
     average = models.PositiveIntegerField(default=0)
     user = models.ForeignKey(User, models.PROTECT,
                              related_name='challenge_user',
