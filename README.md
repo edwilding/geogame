@@ -1,5 +1,5 @@
 # geogame
-[Play it here!](https://geogame.peakdistrictwalks.org.uk)
+[Play it here!](https://geogame.edwilding.co.uk)
 
 **What is this?**
 
