@@ -15,12 +15,16 @@
         <tr>
           <th>Name</th>
           <th>Average</th>
+          <th>Rounds</th>
+          <th>Plays</th>
           <th></th>
         </tr>
         {% for challenge in challenges %}
           <tr>
             <td>{{challenge.name}}</td>
-            <td>{{challenge.average|intcomma}}</td>
+            <td>{{challenge.average}}</td>
+            <td>{{challenge.num_rounds}}</td>
+            <td>{{challenge.num_plays}}</td>
             <td><a class="btn btn-success btn-block" href="{% url 'game:new-game' %}?challenge={{challenge.id}}" role="button">Play</a></td>
           </tr>
         {% endfor %}

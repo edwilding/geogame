@@ -118,6 +118,7 @@ class EditChallengeView(views.UserPassesTestMixin, TemplateView):
         context['challenge'] = challenge
         context['formset'] = ChallengeCoordFormSet(queryset=Coord.objects.none())
         context['coords'] = Coord.objects.filter(challenge=challenge)
+        #add form so users can edit the challenge name
         return context
 
     def post(self, *args, **kwargs):
@@ -161,7 +162,7 @@ class ChallengeListView(views.LoginRequiredMixin, ListView):
             values('challenge').\
             distinct()
 
-        return Challenge.objects.filter(id__in=ids).order_by('average')
+        return Challenge.objects.filter(id__in=ids).order_by('id')
 
 
 class NewGameView(views.LoginRequiredMixin, View):
@@ -241,6 +242,7 @@ class RoundView(views.UserPassesTestMixin, UpdateView):
                 )
             )
 
+
 class RemoveCoordView(View):
     def post(self, request, *args, **kwargs):
         round = get_object_or_404(GameRound, pk=self.kwargs.get('round_pk', 0))
@@ -249,7 +251,7 @@ class RemoveCoordView(View):
         dodgy_coord.report()
 
         if game.challenge:
-            round.score = 30000
+            round.score = 100
             round.guess_lat = 0
             round.guess_lng = 0
             round.save()
@@ -269,7 +271,6 @@ class RemoveCoordView(View):
                     )
                 )
             else:
-                round.game.challenge.update_average_score()
                 return redirect(
                     reverse_lazy(
                         'game:end-recap-view',
@@ -320,7 +321,7 @@ class RoundRecapView(views.UserPassesTestMixin, TemplateView):
         context['guess_lat'] = round.guess_lat
         context['guess_lng'] = round.guess_lng
         context['game_id'] = round.game.id
-        context['distance'] = int(round.result)
+        context['result'] = round.result
 
         next_round = GameRound.objects.filter(
             game=round.game,
@@ -328,11 +329,6 @@ class RoundRecapView(views.UserPassesTestMixin, TemplateView):
         ).first()
 
         if not next_round:
-            #not every game is part of a challenge, so try updated the challenge average
-            try:
-                round.game.challenge.update_average_score()
-            except:
-                pass
             context['last_round'] = True
         else:
             context['next_round_id'] = next_round.id
@@ -361,14 +357,10 @@ class GameRecapView(views.UserPassesTestMixin, TemplateView):
             )
 
         context['results'] = coord_results
-        context['average_distance'] = int(
-            GameRound.objects.filter(game=game)\
-            .aggregate(Avg('result'))\
-            .get('result__avg', 0)
-        )
+        context['total_score'] = game.score
         # not every game is part of a challenge, so keep this in a try
         try:
-            context['all_average'] = game.challenge.average
+            context['all_average'] = game.challenge.average()
         except:
             pass
         return context

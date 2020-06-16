@@ -14,7 +14,7 @@
       {% endif %}
 
       <div class="alert alert-info">
-        Your average guess was {{average_distance|intcomma}}m away.{% if all_average %} The average for this challenge is {{all_average|intcomma}}m{%endif%}
+        Your total score was {{total_score}}.{% if all_average %} The average for this challenge is {{all_average}}{%endif%}
       </div>
 
       <div id="map" class="guessMap"></div>

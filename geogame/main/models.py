@@ -1,6 +1,7 @@
 import os
 import random
 import uuid
+import math
 
 from django.contrib.postgres.search import SearchVectorField, SearchQuery, SearchVector
 from django.conf import settings
@@ -51,20 +52,14 @@ class User(AbstractUser):
 
 
 class Challenge(models.Model):
-    name = models.CharField(_('Challenge Name'), max_length=255, blank=False, db_index=True)
-    average = models.PositiveIntegerField(default=0)
+    name = models.CharField(_('Challenge Name'), max_length=255, blank=True, db_index=True)
     user = models.ForeignKey(User, models.PROTECT,
                              related_name='challenge_user',
                              null=False, blank=False)
 
-    def update_average_score(self):
-        average = GameRound.objects.filter(game__challenge=self).aggregate(Avg('result')).get('result__avg', 0)
-        self.average = average
-        self.save()
-        return average
-
     def setup_challenge(self, user):
         rounds = Coord.objects.filter(challenge=self)
+        #setup games with max score
         game = Game.objects.create(
             challenge=self,
             start=timezone.now(),
@@ -81,6 +76,18 @@ class Challenge(models.Model):
             if order == 0:
                 round_id = round.id
         return game.id, round_id
+
+    @property
+    def average(self):
+        #this should be cached, but with low volumes its fine as is
+        return int(round(Game.objects.filter(challenge=self).aggregate(Avg('score')).get('score__avg', 0)))
+        
+    @property
+    def num_rounds(self):
+        return Coord.objects.filter(challenge=self).count()
+        
+    def num_plays(self):
+        return Game.objects.filter(challenge=self).count()
 
 
 class Coord(models.Model):
@@ -132,5 +139,13 @@ class GameRound(models.Model):
         else:
             actual_coord = (self.coord.lat, self.coord.lng,)
             guess_coord = (self.guess_lat, self.guess_lng,)
-            self.result = distance.distance(actual_coord, guess_coord).km * 1000
+            #get distance in meters between actual coord and the guess
+            dst = distance.distance(actual_coord, guess_coord).km * 1000
+            #calculate a score of 0 to 100
+            if dst < 100:
+                self.result = 100
+            elif dst > 100000:
+                self.result = 0
+            else:
+                self.result = int(round(14.46 * (11.52 - math.log(dst))))
         super().save(*args, **kwargs)
