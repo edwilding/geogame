@@ -80,7 +80,10 @@ class Challenge(models.Model):
     @property
     def average(self):
         #this should be cached, but with low volumes its fine as is
-        return int(round(Game.objects.filter(challenge=self).aggregate(Avg('score')).get('score__avg', 0)))
+        if Game.objects.filter(challenge=self):
+            return int(round(Game.objects.filter(challenge=self).aggregate(Avg('score')).get('score__avg', 0)))
+        else:
+            return 0
         
     @property
     def num_rounds(self):

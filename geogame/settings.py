@@ -24,7 +24,7 @@ with open(os.path.join(BASE_DIR, "env_secret_key.txt")) as secret_key:
     SECRET_KEY = secret_key.read().strip()
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
